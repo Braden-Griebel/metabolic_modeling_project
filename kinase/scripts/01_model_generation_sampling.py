@@ -241,7 +241,7 @@ rxn_bounds_df.to_csv(
 
 # Generate Samples for all the IMAT Models
 logger.info("Starting flux sampling")
-for sample in itertools.chain(expr_rpkm, ["WT_combined"]):
+for sample in itertools.chain(expr_rpkm.index, ["WT_combined"]):
     logger.info(f"Sampling from {sample}")
     flux_sample_path = FLUX_SAMPLES_PATH / f"{sample}.parquet"
     if flux_sample_path.exists():
