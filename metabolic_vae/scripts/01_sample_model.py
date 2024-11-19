@@ -10,6 +10,7 @@ import pathlib
 # External Imports
 from cobra.sampling import OptGPSampler
 import metworkpy
+from sklearn.model_selection import train_test_split
 
 # Local Imports
 
@@ -36,4 +37,15 @@ samples = sampler.sample(NUM_SAMPLES)
 # Filter for valid samples
 valid_samples = samples[sampler.validate(samples) == "v"]
 
-# Shuffle the samples
+# Split into test and train sets
+train_samples, test_samples = train_test_split(
+    valid_samples, test_size=TEST_PROP, shuffle=True
+)  # split 80/20
+train_samples, validate_samples = train_test_split(
+    train_samples, test_size=VALIDATION_PROP / (1 - TEST_PROP), shuffle=True
+)  # split 10% of total off as validation samples
+
+# Save the samples
+train_samples.to_parquet(FLUX_SAMPLE_PATH / "train.parquet", index=False)
+validate_samples.to_parquet(FLUX_SAMPLE_PATH / "validate.parquet", index=False)
+test_samples.to_parquet(FLUX_SAMPLE_PPATH / "test.parquet", index=False)
