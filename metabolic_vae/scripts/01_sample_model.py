@@ -48,4 +48,4 @@ train_samples, validate_samples = train_test_split(
 # Save the samples
 train_samples.to_parquet(FLUX_SAMPLE_PATH / "train.parquet", index=False)
 validate_samples.to_parquet(FLUX_SAMPLE_PATH / "validate.parquet", index=False)
-test_samples.to_parquet(FLUX_SAMPLE_PPATH / "test.parquet", index=False)
+test_samples.to_parquet(FLUX_SAMPLE_PATH / "test.parquet", index=False)
