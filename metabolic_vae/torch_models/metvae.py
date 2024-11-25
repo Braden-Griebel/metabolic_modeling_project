@@ -93,3 +93,24 @@ def loss_function(x, x_recon, mean, logvar):
     reproduction_loss = nn.functional.mse_loss(x_recon, x)
     kl_loss = -0.5 * torch.sum((1 + logvar - mean.power(2) - torch.exp(logvar)))
     return reproduction_loss + kl_loss
+
+
+def train(model, optimizer, train_loader, x_dim, epochs, batch_size, device):
+    model.train(True)  # put model in training mode so that gradient tracking is on
+    overall_loss = 0
+    for _ in range(epochs):
+        overall_loss = 0
+        for _, (x, _) in enumerate(train_loader):
+            x = x.view(batch_size, x_dim).to(device)
+
+            optimizer.zero_grad()  # Clear the accumulated gradients
+
+            x_recon, mean, logvar = model(x)
+            loss = loss_function(x, x_recon, mean, logvar)
+
+            overall_loss += loss.item()
+
+            loss.backward()  # Accumulate grads for this batch
+            optimizer.step()  # Step the optimizer using the batches gradients
+
+    return overall_loss
