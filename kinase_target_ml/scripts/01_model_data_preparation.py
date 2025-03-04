@@ -40,7 +40,7 @@ N_NEIGHBORS = 5
 
 # General Constants
 REACTION_LIST = BASE_MODEL.reactions.list_attr("id")
-GENE_LIST = BASE_MODEL.reactions.list_attr("id")
+GENE_LIST = BASE_MODEL.genes.list_attr("id")
 
 
 # Setup Logging
@@ -173,6 +173,8 @@ clos_cent = pd.Series(nx.closeness_centrality(mi_network_reciprocal, distance="w
 logger.info("Saving results to dataframe")
 centrality_df.loc[bet_cent.index, "betweeness"] = bet_cent
 centrality_df.loc[clos_cent.index, "closeness"] = clos_cent
+# Add a prefix to the centrality names
+centrality_df = centrality_df.add_prefix("mi_", axis=1)
 # Add the centrality data onto the rxn_results_df
 rxn_results_df = pd.concat([rxn_results_df, centrality_df], axis=1, ignore_index=False)
 
@@ -220,16 +222,25 @@ for rxn in BASE_MODEL.reactions:
     for gene in rxn.genes:
         subsystem_dict["whole_metabolism"].append(gene.id)
 logger.info("Finding KO divergence for all subsystems")
+div_model = metworkpy.read_model(
+    BASE_PATH.parent / "models" / "iEK1011_m7H10_media.json"
+)
 ko_divergence = metworkpy.divergence.ko_divergence(
-    model=BASE_MODEL.copy(),
+    model=div_model,
     genes_to_ko=GENE_LIST,
     target_networks=subsystem_dict,
     divergence_metric="kl",
     n_neighbors=N_NEIGHBORS,
     sample_count=NUM_SAMPLES,
+    jitter=None,
+    jitter_seed=None,
+    distance_metric="euclidean",
+    progress_bar=False,
     processes=PROCESSES,
 )
 logger.info("Found KO divergence, Saving to results dataframe")
+# Add prefix describing what the columns mean
+ko_divergence = ko_divergence.add_prefix("ko_divergence_", axis=1)
 gene_results_df = pd.concat([gene_results_df, ko_divergence], axis=1)
 
 # Section: Knock out Max Flux
@@ -269,10 +280,10 @@ rxn_gene_results_df = (
     .groupby("gene")
     .aggregate(
         {
-            "pagerank": "max",
-            "eigenvector": "max",
-            "betweeness": "max",
-            "closeness": "max",
+            "mi_pagerank": "max",
+            "mi_eigenvector": "max",
+            "mi_betweeness": "max",
+            "mi_closeness": "max",
             "reaction_pagerank": "max",
             "reaction_eigenvector_centrality": "max",
             "reaction_betweeness_centrality": "max",
